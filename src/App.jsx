@@ -312,8 +312,7 @@ function runSelfTests() {
   };
 
   const csv = buildCsvString([sampleRow]);
-  console.assert(csv.includes("
-"), "CSV should contain newline separators.");
+  console.assert(csv.includes("\n"), "CSV should contain newline separators.");
   console.assert(csv.includes('"Jane ""JJ"" Doe"'), "CSV should escape quotes.");
   console.assert(csv.includes("Customer name"), "CSV should include customer name header.");
 }

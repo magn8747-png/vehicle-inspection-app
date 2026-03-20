@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import "./App.css";
 
 const runtimeEnv = typeof import.meta !== "undefined" ? import.meta.env || {} : {};
 const SUPABASE_URL = runtimeEnv.VITE_SUPABASE_URL || "";
@@ -144,7 +145,9 @@ function mapRowToInspection(row) {
 }
 
 function sortByInspectionDateDesc(items) {
-  return [...items].sort((a, b) => new Date(b.inspectionDateTime) - new Date(a.inspectionDateTime));
+  return [...items].sort(
+    (a, b) => new Date(b.inspectionDateTime) - new Date(a.inspectionDateTime)
+  );
 }
 
 function readDemoData() {
@@ -205,9 +208,7 @@ function buildCsvString(rows) {
     row.updatedAt,
   ]);
 
-  return [headers, ...lines]
-    .map((row) => row.map(escape).join(","))
-    .join("\n");
+  return [headers, ...lines].map((row) => row.map(escape).join(",")).join("\n");
 }
 
 function downloadCsv(rows) {
@@ -216,7 +217,10 @@ function downloadCsv(rows) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `vehicle-hygiene-inspections-${new Date().toISOString().slice(0, 19).replaceAll(":", "-")}.csv`;
+  a.download = `vehicle-hygiene-inspections-${new Date()
+    .toISOString()
+    .slice(0, 19)
+    .replaceAll(":", "-")}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -234,7 +238,9 @@ function downloadInspectionPdf(inspection) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(`Generated: ${formatDisplayDate(new Date().toISOString())}`, pageWidth - 40, 48, { align: "right" });
+  doc.text(`Generated: ${formatDisplayDate(new Date().toISOString())}`, pageWidth - 40, 48, {
+    align: "right",
+  });
 
   autoTable(doc, {
     startY: 72,
@@ -284,7 +290,10 @@ function downloadInspectionPdf(inspection) {
   });
 
   const safeVehicle = (inspection.vehicleNumber || "vehicle").replace(/[^a-z0-9-_]+/gi, "-");
-  const safeDate = new Date(inspection.inspectionDateTime || Date.now()).toISOString().slice(0, 10);
+  const safeDate = new Date(inspection.inspectionDateTime || Date.now())
+    .toISOString()
+    .slice(0, 10);
+
   doc.save(`inspection-report-${safeVehicle}-${safeDate}.pdf`);
 }
 
@@ -321,18 +330,12 @@ if (typeof window !== "undefined") {
   runSelfTests();
 }
 
-function AppButton({ children, variant = "primary", className = "", ...props }) {
-  const base =
-    "min-h-11 rounded-2xl px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50";
-  const styles =
-    variant === "secondary"
-      ? "border border-slate-200 bg-white/80 text-slate-800 shadow-sm hover:bg-white"
-      : variant === "danger"
-      ? "bg-red-600 text-white shadow-sm hover:bg-red-700"
-      : "bg-slate-900 text-white shadow-sm hover:bg-slate-800";
-
+function Button({ children, variant = "primary", className = "", ...props }) {
   return (
-    <button {...props} className={`${base} ${styles} ${className}`}>
+    <button
+      {...props}
+      className={`btn ${variant === "secondary" ? "btn-secondary" : "btn-primary"} ${className}`}
+    >
       {children}
     </button>
   );
@@ -340,52 +343,34 @@ function AppButton({ children, variant = "primary", className = "", ...props }) 
 
 function Field({ label, children }) {
   return (
-    <label className="grid gap-2">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+    <label className="field">
+      <span className="field-label">{label}</span>
       {children}
     </label>
   );
 }
 
-function CardShell({ title, description, children, aside }) {
+function SectionCard({ title, description, rightContent, children }) {
   return (
-    <section className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:p-6">
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <section className="section-card">
+      <div className="section-head">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h2>
-          {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+          <h2>{title}</h2>
+          {description ? <p>{description}</p> : null}
         </div>
-        {aside}
+        {rightContent ? <div>{rightContent}</div> : null}
       </div>
       {children}
     </section>
   );
 }
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, tone = "default" }) {
   return (
-    <div className="rounded-3xl border border-white/70 bg-white/85 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</div>
-      <div className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{value}</div>
+    <div className={`stat-card stat-${tone}`}>
+      <div className="stat-label">{label}</div>
+      <div className="stat-value">{value}</div>
     </div>
-  );
-}
-
-function TextInput(props) {
-  return (
-    <input
-      {...props}
-      className={`min-h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100 ${props.className || ""}`}
-    />
-  );
-}
-
-function TextArea(props) {
-  return (
-    <textarea
-      {...props}
-      className={`min-h-[130px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100 ${props.className || ""}`}
-    />
   );
 }
 
@@ -423,6 +408,7 @@ export default function VehicleInspectionApp() {
         .limit(500);
 
       if (fetchError) throw fetchError;
+
       setInspections((data || []).map(mapRowToInspection));
       setLastSyncedAt(new Date().toISOString());
     } catch (err) {
@@ -465,7 +451,10 @@ export default function VehicleInspectionApp() {
     [inspections]
   );
 
-  const allChecksPassed = useMemo(() => Object.values(form.checks).every(Boolean), [form.checks]);
+  const allChecksPassed = useMemo(
+    () => Object.values(form.checks).every(Boolean),
+    [form.checks]
+  );
 
   const filteredInspections = useMemo(() => {
     return inspections.filter((item) => {
@@ -481,7 +470,10 @@ export default function VehicleInspectionApp() {
         .join(" ")
         .toLowerCase();
 
-      return haystack.includes(search.toLowerCase()) && (statusFilter === "all" || item.status === statusFilter);
+      const matchesSearch = haystack.includes(search.toLowerCase());
+      const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
     });
   }, [inspections, search, statusFilter]);
 
@@ -591,7 +583,9 @@ export default function VehicleInspectionApp() {
 
         const updatedInspection = mapRowToInspection(data);
         setInspections((prev) =>
-          sortByInspectionDateDesc(prev.map((item) => (item.id === editingId ? updatedInspection : item)))
+          sortByInspectionDateDesc(
+            prev.map((item) => (item.id === editingId ? updatedInspection : item))
+          )
         );
         setExpandedId(updatedInspection.id);
         setMessage("Inspection updated in the online database.");
@@ -672,213 +666,326 @@ export default function VehicleInspectionApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-3 sm:p-4 md:p-6">
-      <div className="mx-auto max-w-6xl space-y-5">
-        <header className="rounded-[28px] border border-white/70 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(241,245,249,0.92))] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="page-bg">
+      <div className="app-wrap">
+        <header className="hero-card">
+          <div className="hero-topline">Frankly transport quality control</div>
+          <div className="hero-row">
             <div>
-              <div className="mb-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                Vehicle hygiene workflow
-              </div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Vehicle Hygiene Inspection</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Professional inspection form designed for tablet and mobile use, with shared history, CSV export, PDF reports, and cloud-ready storage.
+              <h1>Vehicle Hygiene Inspection</h1>
+              <p className="hero-text">
+                A clean, mobile-friendly inspection workflow with cloud storage, searchable history,
+                CSV export, and PDF reports for each control.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2 md:max-w-[320px] md:justify-end">
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
+            <div className="hero-badges">
+              <span className="chip chip-neutral">
                 {allChecksPassed ? "All checks marked" : "Inspection in progress"}
               </span>
-              <span
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ${
-                  mode === "cloud"
-                    ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border border-amber-200 bg-amber-50 text-amber-700"
-                }`}
-              >
-                {mode === "cloud" ? "Cloud mode (Supabase)" : "Preview mode (local demo storage)"}
+              <span className={`chip ${mode === "cloud" ? "chip-success" : "chip-warning"}`}>
+                {mode === "cloud" ? "Cloud mode (Supabase)" : "Preview mode"}
               </span>
             </div>
           </div>
         </header>
 
         {mode === "demo" && (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm">
-            Preview is running in demo mode because Supabase environment variables are not set. The app still works here, but saved records stay only in this browser preview until you connect Supabase.
+          <div className="notice notice-warning">
+            The app is currently running in demo mode because Supabase environment variables are not set.
+            Saved data will stay in this browser only until cloud mode is enabled.
           </div>
         )}
 
-        {(message || error) && (
-          <div className="space-y-2">
-            {message && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{message}</div>}
-            {error && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
-          </div>
-        )}
+        {message && <div className="notice notice-success">{message}</div>}
+        {error && <div className="notice notice-error">{error}</div>}
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <StatCard label="Total Saved" value={inspections.length} />
-          <StatCard label="Approved" value={approvedCount} />
-          <StatCard label="Rejected" value={rejectedCount} />
+        <div className="stats-grid">
+          <StatCard label="Total saved" value={inspections.length} />
+          <StatCard label="Approved" value={approvedCount} tone="success" />
+          <StatCard label="Rejected" value={rejectedCount} tone="danger" />
         </div>
 
-        <form onSubmit={saveInspection} className="space-y-5">
-          <CardShell
-            title={editingId ? "Edit Inspection" : "New Inspection"}
-            description="Fill in the inspection details before approving or rejecting the vehicle."
-            aside={editingId ? <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">Editing existing inspection</span> : null}
+        <form onSubmit={saveInspection} className="form-stack">
+          <SectionCard
+            title={editingId ? "Edit inspection" : "New inspection"}
+            description="Fill in the control details before saving the inspection."
+            rightContent={
+              editingId ? <span className="chip chip-neutral">Editing existing record</span> : null
+            }
           >
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="form-grid form-grid-3">
               <Field label="Date and Time">
-                <TextInput type="datetime-local" value={form.inspectionDateTime} onChange={(e) => setField("inspectionDateTime", e.target.value)} />
+                <input
+                  className="input"
+                  type="datetime-local"
+                  value={form.inspectionDateTime}
+                  onChange={(e) => setField("inspectionDateTime", e.target.value)}
+                />
               </Field>
+
               <Field label="Driver Name">
-                <TextInput placeholder="Enter driver name" value={form.driverName} onChange={(e) => setField("driverName", e.target.value)} />
+                <input
+                  className="input"
+                  placeholder="Enter driver name"
+                  value={form.driverName}
+                  onChange={(e) => setField("driverName", e.target.value)}
+                />
               </Field>
+
               <Field label="Vehicle Number">
-                <TextInput placeholder="Enter vehicle number" value={form.vehicleNumber} onChange={(e) => setField("vehicleNumber", e.target.value)} />
+                <input
+                  className="input"
+                  placeholder="Enter vehicle number"
+                  value={form.vehicleNumber}
+                  onChange={(e) => setField("vehicleNumber", e.target.value)}
+                />
               </Field>
+
               <Field label="Inspector">
-                <TextInput placeholder="Enter inspector name" value={form.inspector} onChange={(e) => setField("inspector", e.target.value)} />
+                <input
+                  className="input"
+                  placeholder="Enter inspector name"
+                  value={form.inspector}
+                  onChange={(e) => setField("inspector", e.target.value)}
+                />
               </Field>
+
               <Field label="Customer Name">
-                <TextInput placeholder="Enter customer name" value={form.customerName} onChange={(e) => setField("customerName", e.target.value)} />
+                <input
+                  className="input"
+                  placeholder="Enter customer name"
+                  value={form.customerName}
+                  onChange={(e) => setField("customerName", e.target.value)}
+                />
               </Field>
+
               <Field label="Carrier">
-                <TextInput placeholder="Enter carrier" value={form.carrier} onChange={(e) => setField("carrier", e.target.value)} />
+                <input
+                  className="input"
+                  placeholder="Enter carrier"
+                  value={form.carrier}
+                  onChange={(e) => setField("carrier", e.target.value)}
+                />
               </Field>
             </div>
-          </CardShell>
+          </SectionCard>
 
-          <CardShell title="Inspection Checklist" description="Tick each box only if the requirement is fulfilled.">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <SectionCard
+            title="Inspection checklist"
+            description="Tick each box only if the requirement is fulfilled."
+          >
+            <div className="form-grid form-grid-3">
               {checklistItems.map(([key, label]) => (
-                <label key={key} className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white">
-                  <input type="checkbox" checked={form.checks[key]} onChange={(e) => setCheck(key, e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
-                  <span className="text-sm font-medium text-slate-800">{label}</span>
+                <label key={key} className="check-card">
+                  <input
+                    type="checkbox"
+                    checked={form.checks[key]}
+                    onChange={(e) => setCheck(key, e.target.checked)}
+                  />
+                  <span>{label}</span>
                 </label>
               ))}
             </div>
-          </CardShell>
+          </SectionCard>
 
-          <CardShell title="Temperature and Comments" description="Add the measured temperature and any relevant notes.">
-            <div className="grid gap-4">
+          <SectionCard
+            title="Temperature and comments"
+            description="Add the measured temperature and any relevant notes."
+          >
+            <div className="form-grid">
               <Field label="Temperature (Chilled/Frozen)">
-                <TextInput placeholder="Example: 3°C / -18°C" value={form.temperature} onChange={(e) => setField("temperature", e.target.value)} />
+                <input
+                  className="input"
+                  placeholder="Example: 3°C / -18°C"
+                  value={form.temperature}
+                  onChange={(e) => setField("temperature", e.target.value)}
+                />
               </Field>
+
               <Field label="Comments">
-                <TextArea placeholder="Add comments here" value={form.comments} onChange={(e) => setField("comments", e.target.value)} />
+                <textarea
+                  className="textarea"
+                  placeholder="Add comments here"
+                  value={form.comments}
+                  onChange={(e) => setField("comments", e.target.value)}
+                />
               </Field>
             </div>
-          </CardShell>
+          </SectionCard>
 
-          <CardShell title="Inspection Result" description="Select whether the vehicle is approved or rejected.">
-            <div className="grid gap-3 sm:grid-cols-2">
+          <SectionCard
+            title="Inspection result"
+            description="Choose whether the vehicle is approved or rejected."
+          >
+            <div className="form-grid form-grid-2">
               {[
                 ["approved", "Approved"],
                 ["rejected", "Rejected"],
               ].map(([value, label]) => (
-                <label key={value} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-slate-300 hover:bg-white">
-                  <input type="radio" name="status" value={value} checked={form.status === value} onChange={(e) => setField("status", e.target.value)} className="h-4 w-4 border-slate-300" />
-                  <span className="text-sm font-medium text-slate-800">{label}</span>
+                <label key={value} className="check-card">
+                  <input
+                    type="radio"
+                    name="status"
+                    value={value}
+                    checked={form.status === value}
+                    onChange={(e) => setField("status", e.target.value)}
+                  />
+                  <span>{label}</span>
                 </label>
               ))}
             </div>
-          </CardShell>
+          </SectionCard>
 
-          <div className="sticky bottom-3 z-10 flex flex-col gap-3 rounded-3xl border border-white/70 bg-white/85 p-2 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row sm:justify-end">
+          <div className="sticky-actions">
             {editingId && (
-              <AppButton type="button" variant="secondary" onClick={resetForm}>
-                Cancel Editing
-              </AppButton>
+              <Button type="button" variant="secondary" onClick={resetForm}>
+                Cancel editing
+              </Button>
             )}
-            <AppButton type="button" variant="secondary" onClick={resetForm}>
-              Reset Form
-            </AppButton>
-            <AppButton type="submit" disabled={saving}>
-              {saving ? "Saving..." : editingId ? "Update Inspection" : "Save Inspection"}
-            </AppButton>
+            <Button type="button" variant="secondary" onClick={resetForm}>
+              Reset form
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? "Saving..." : editingId ? "Update inspection" : "Save inspection"}
+            </Button>
           </div>
         </form>
 
-        <CardShell title="Inspection History" description="Search, edit, delete, and export saved inspections as CSV or PDF.">
-          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="grid gap-3 md:grid-cols-[1fr_180px] md:flex-1">
-              <TextInput placeholder="Search driver, vehicle, inspector, customer, carrier or comments" value={search} onChange={(e) => setSearch(e.target.value)} />
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="min-h-11 rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100">
-                <option value="all">All statuses</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <AppButton type="button" variant="secondary" onClick={() => downloadCsv(filteredInspections)} disabled={filteredInspections.length === 0}>
+        <SectionCard
+          title="Inspection history"
+          description="Search, edit, delete, and export saved inspections."
+          rightContent={
+            <div className="history-actions-top">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => downloadCsv(filteredInspections)}
+                disabled={filteredInspections.length === 0}
+              >
                 Export CSV
-              </AppButton>
-              <AppButton type="button" variant="secondary" onClick={loadInspections}>
+              </Button>
+              <Button type="button" variant="secondary" onClick={loadInspections}>
                 Refresh
-              </AppButton>
+              </Button>
+            </div>
+          }
+        >
+          <div className="history-toolbar">
+            <input
+              className="input"
+              placeholder="Search driver, vehicle, inspector, customer, carrier or comments"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <select
+              className="input"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All statuses</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+
+            <div className="sync-text">
+              {lastSyncedAt ? `Last synced: ${formatDisplayDate(lastSyncedAt)}` : "Not synced yet"}
             </div>
           </div>
 
-          <div className="mb-4 text-xs text-slate-500">{lastSyncedAt ? `Last synced: ${formatDisplayDate(lastSyncedAt)}` : "Not synced yet"}</div>
-
           {loading ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">Loading inspections...</div>
+            <div className="empty-state">Loading inspections...</div>
           ) : filteredInspections.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">No saved inspections found.</div>
+            <div className="empty-state">No saved inspections found.</div>
           ) : (
-            <div className="space-y-3">
+            <div className="history-list">
               {filteredInspections.map((inspection) => {
                 const isExpanded = expandedId === inspection.id;
                 const passedChecks = Object.values(inspection.checks).filter(Boolean).length;
 
                 return (
-                  <div key={inspection.id} className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm transition hover:bg-white">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${inspection.status === "approved" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                  <div key={inspection.id} className="history-card">
+                    <div className="history-header">
+                      <div className="history-main">
+                        <div className="history-meta">
+                          <span
+                            className={`status-pill ${
+                              inspection.status === "approved" ? "approved" : "rejected"
+                            }`}
+                          >
                             {inspection.status === "approved" ? "Approved" : "Rejected"}
                           </span>
-                          <span className="text-xs text-slate-500">{formatDisplayDate(inspection.inspectionDateTime)}</span>
+                          <span className="muted-text">
+                            {formatDisplayDate(inspection.inspectionDateTime)}
+                          </span>
                         </div>
 
-                        <div>
-                          <div className="text-lg font-semibold text-slate-900">Vehicle {inspection.vehicleNumber || "-"}</div>
-                          <div className="text-sm text-slate-600">Driver: {inspection.driverName || "-"} · Inspector: {inspection.inspector || "-"}</div>
-                          <div className="text-sm text-slate-600">Customer: {inspection.customerName || "-"} · Carrier: {inspection.carrier || "-"}</div>
+                        <div className="history-title">
+                          Vehicle {inspection.vehicleNumber || "-"}
                         </div>
 
-                        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                          <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">Checks: {passedChecks}/6</span>
-                          <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">Temp: {inspection.temperature || "-"}</span>
-                          <span className="rounded-full bg-white px-2.5 py-1 shadow-sm">Updated: {formatDisplayDate(inspection.updatedAt)}</span>
+                        <div className="history-subtitle">
+                          Driver: {inspection.driverName || "-"} · Inspector:{" "}
+                          {inspection.inspector || "-"}
+                        </div>
+
+                        <div className="history-subtitle">
+                          Customer: {inspection.customerName || "-"} · Carrier:{" "}
+                          {inspection.carrier || "-"}
+                        </div>
+
+                        <div className="tag-row">
+                          <span className="tag">Checks: {passedChecks}/6</span>
+                          <span className="tag">Temp: {inspection.temperature || "-"}</span>
+                          <span className="tag">
+                            Updated: {formatDisplayDate(inspection.updatedAt)}
+                          </span>
                         </div>
                       </div>
 
-                      <div className="grid gap-2 sm:grid-cols-3 lg:w-[360px] lg:grid-cols-1">
-                        <AppButton type="button" variant="secondary" onClick={() => setExpandedId(isExpanded ? null : inspection.id)}>
+                      <div className="history-side-actions">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => setExpandedId(isExpanded ? null : inspection.id)}
+                        >
                           {isExpanded ? "Hide details" : "View details"}
-                        </AppButton>
-                        <AppButton type="button" variant="secondary" onClick={() => editInspection(inspection)}>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => editInspection(inspection)}
+                        >
                           Edit
-                        </AppButton>
-                        <AppButton type="button" variant="secondary" onClick={() => downloadInspectionPdf(inspection)}>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => downloadInspectionPdf(inspection)}
+                        >
                           Download PDF
-                        </AppButton>
-                        <AppButton type="button" variant="secondary" onClick={() => deleteInspection(inspection.id)}>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => deleteInspection(inspection.id)}
+                        >
                           Delete
-                        </AppButton>
+                        </Button>
                       </div>
                     </div>
 
                     {isExpanded && (
-                      <div className="mt-4 grid gap-4 border-t border-slate-200 pt-4">
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="history-details">
+                        <div className="detail-grid detail-grid-checks">
                           {checklistItems.map(([key, label]) => (
-                            <div key={key} className="flex items-center gap-2 rounded-2xl bg-white p-3 text-sm text-slate-700 shadow-sm">
-                              <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${inspection.checks[key] ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                            <div key={key} className="detail-check-card">
+                              <span
+                                className={`check-dot ${
+                                  inspection.checks[key] ? "check-dot-ok" : "check-dot-bad"
+                                }`}
+                              >
                                 {inspection.checks[key] ? "✓" : "✕"}
                               </span>
                               <span>{label}</span>
@@ -886,28 +993,30 @@ export default function VehicleInspectionApp() {
                           ))}
                         </div>
 
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                          <div className="rounded-2xl bg-white p-4 shadow-sm">
-                            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Inspection Date</div>
-                            <div className="mt-1 text-sm text-slate-800">{formatDisplayDate(inspection.inspectionDateTime)}</div>
+                        <div className="detail-grid detail-grid-info">
+                          <div className="info-card">
+                            <div className="info-label">Inspection date</div>
+                            <div>{formatDisplayDate(inspection.inspectionDateTime)}</div>
                           </div>
-                          <div className="rounded-2xl bg-white p-4 shadow-sm">
-                            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Created At</div>
-                            <div className="mt-1 text-sm text-slate-800">{formatDisplayDate(inspection.createdAt)}</div>
+                          <div className="info-card">
+                            <div className="info-label">Created at</div>
+                            <div>{formatDisplayDate(inspection.createdAt)}</div>
                           </div>
-                          <div className="rounded-2xl bg-white p-4 shadow-sm">
-                            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Last Updated</div>
-                            <div className="mt-1 text-sm text-slate-800">{formatDisplayDate(inspection.updatedAt)}</div>
+                          <div className="info-card">
+                            <div className="info-label">Last updated</div>
+                            <div>{formatDisplayDate(inspection.updatedAt)}</div>
                           </div>
-                          <div className="rounded-2xl bg-white p-4 shadow-sm">
-                            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Result</div>
-                            <div className="mt-1 text-sm text-slate-800">{inspection.status === "approved" ? "Approved" : "Rejected"}</div>
+                          <div className="info-card">
+                            <div className="info-label">Result</div>
+                            <div>{inspection.status === "approved" ? "Approved" : "Rejected"}</div>
                           </div>
                         </div>
 
-                        <div className="rounded-2xl bg-white p-4 shadow-sm">
-                          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Comments</div>
-                          <div className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{inspection.comments || "No comments added."}</div>
+                        <div className="info-card">
+                          <div className="info-label">Comments</div>
+                          <div className="pre-wrap">
+                            {inspection.comments || "No comments added."}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -916,7 +1025,7 @@ export default function VehicleInspectionApp() {
               })}
             </div>
           )}
-        </CardShell>
+        </SectionCard>
       </div>
     </div>
   );

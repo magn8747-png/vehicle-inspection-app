@@ -184,6 +184,7 @@ function buildCsvString(rows) {
   ];
 
   const escape = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+
   const lines = rows.map((row) => [
     row.inspectionDateTime,
     row.driverName,
@@ -204,8 +205,9 @@ function buildCsvString(rows) {
     row.updatedAt,
   ]);
 
-  return [headers, ...lines].map((row) => row.map(escape).join(",")).join("
-");
+  return [headers, ...lines]
+    .map((row) => row.map(escape).join(","))
+    .join("\n");
 }
 
 function downloadCsv(rows) {

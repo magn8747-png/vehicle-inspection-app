@@ -674,8 +674,7 @@ export default function VehicleInspectionApp() {
             <div>
               <h1>Vehicle Hygiene Inspection</h1>
               <p className="hero-text">
-                A clean, mobile-friendly inspection workflow with cloud storage, searchable history,
-                CSV export, and PDF reports for each control.
+               Created by Magnus. If you need changes, let him know. "You can know anything. It's all there. You just have to find it". 
               </p>
             </div>
 
@@ -700,13 +699,7 @@ export default function VehicleInspectionApp() {
         {message && <div className="notice notice-success">{message}</div>}
         {error && <div className="notice notice-error">{error}</div>}
 
-        <div className="stats-grid">
-          <StatCard label="Total saved" value={inspections.length} />
-          <StatCard label="Approved" value={approvedCount} tone="success" />
-          <StatCard label="Rejected" value={rejectedCount} tone="danger" />
-        </div>
-
-        <form onSubmit={saveInspection} className="form-stack">
+                <form onSubmit={saveInspection} className="form-stack">
           <SectionCard
             title={editingId ? "Edit inspection" : "New inspection"}
             description="Fill in the control details before saving the inspection."
